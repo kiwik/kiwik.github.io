@@ -30,7 +30,7 @@ tags : [apache, fail2ban, mod-security, mod-evasive, cicd]
 
 ## mod_evasive ##
 
-Apache 有一个 evasive 模块可以帮助识别并阻止 DoS/DDos 攻击，原理是跟踪 HTTP 请求，如果同一请求在一段配置的时间内访问超过阈值，就报警，然后在***应用级别***阻止后续的请求，返回 `403 Forbidden`。配置文件 `/etc/apache2/mods-enabled/evasive.conf` 可以设置具体的识别阈值和识别窗口大小。mod\_evasive 的安装启用方式如下：
+Apache 有一个 evasive 模块可以帮助识别并阻止 DoS/DDos 攻击，原理是跟踪 HTTP 请求，如果同一请求在一段配置的时间内访问超过阈值，就报警，然后在__**应用级别**__阻止后续的请求，返回 `403 Forbidden`。配置文件 `/etc/apache2/mods-enabled/evasive.conf` 可以设置具体的识别阈值和识别窗口大小。mod\_evasive 的安装启用方式如下：
 
 {% highlight bash %}
 
@@ -50,7 +50,7 @@ sudo systemctl reload apache2
 
 ## mod_security ##
 
-mod\_security 相比 mod\_evasive 要更强大一些，作为一个 Web 应用防火墙（WAF），它使用规则引擎识别多种网络攻击行为模式，例如：SQL 注入，跨站攻击等，并可以改变 Request 和 Response 中的内容做出防御，它也工作在***应用级别***。安装和启用 mod\_security 的方式如下：
+mod\_security 相比 mod\_evasive 要更强大一些，作为一个 Web 应用防火墙（WAF），它使用规则引擎识别多种网络攻击行为模式，例如：SQL 注入，跨站攻击等，并可以改变 Request 和 Response 中的内容做出防御，它也工作在__**应用级别**__。安装和启用 mod\_security 的方式如下：
 
 {% highlight bash %}
 
@@ -107,7 +107,7 @@ Engine-Mode: "ENABLED"
 
 ## fail2ban ##
 
-fail2ban 与上面两个有本质的不同，它是一个独立软件，并不是 Apache 的扩展模块，更重要的是它工作在***网络级别***，上面两个工作在***应用级别***。fail2ban 通过扫描日志文件，可以是 Apache 也可以是 sshd 或其它应用的日志，发现符合模式的日志内容之后，阻止具有恶意迹象的 IP 继续对系统的访问。安装和启用 fail2ban 的方式如下：
+fail2ban 与上面两个有本质的不同，它是一个独立软件，并不是 Apache 的扩展模块，更重要的是它工作在__**网络级别**__，上面两个工作在***应用级别***。fail2ban 通过扫描日志文件，可以是 Apache 也可以是 sshd 或其它应用的日志，发现符合模式的日志内容之后，阻止具有恶意迹象的 IP 继续对系统的访问。安装和启用 fail2ban 的方式如下：
 
 {% highlight bash %}
 
@@ -150,7 +150,7 @@ ignoreregex =
 
 > 认真学习过正则表达式，让我一直觉得受益匪浅。
 
-我一开始并不太理解 mod\_security 和 mod\_evasive 所谓***应用级别***的阻止与 fail2ban ***网络级别***的阻止有什么不同，对比启用 `fail2ban` 之后的现象发现，启用了 mod\_security 和 mod\_evasive 之后，网络请求还是会继续进入 Apache 处理，access 日志中还是存在大量异常的请求，只不过响应码从 404 变成了其他 403 之类，日志还是会暴涨好几个G，但是启用了 fail2ban 之后，进入 Apache 的请求明显变少了，看了下 fail2ban 的文档，发现一个老朋友 `iptables`，原来 fail2ban 在获取到恶意 IP 之后，直接通过 iptables 规则，将网络请求 reject 掉了，请求压根就不会到应用层级处理，当然就不会轮到 Apache 处理，了然，就如 OpenStack 中的安全组。
+我一开始并不太理解 mod\_security 和 mod\_evasive 所谓__**应用级别**__的阻止与 fail2ban __**网络级别**__的阻止有什么不同，对比启用 `fail2ban` 之后的现象发现，启用了 mod\_security 和 mod\_evasive 之后，网络请求还是会继续进入 Apache 处理，access 日志中还是存在大量异常的请求，只不过响应码从 404 变成了其他 403 之类，日志还是会暴涨好几个G，但是启用了 fail2ban 之后，进入 Apache 的请求明显变少了，看了下 fail2ban 的文档，发现一个老朋友 `iptables`，原来 fail2ban 在获取到恶意 IP 之后，直接通过 iptables 规则，将网络请求 reject 掉了，请求压根就不会到应用层级处理，当然就不会轮到 Apache 处理，了然，就如 OpenStack 中的安全组。
 
 {% highlight bash %}
 
