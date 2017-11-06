@@ -150,7 +150,7 @@ ignoreregex =
 
 > 认真学习过正则表达式，让我一直觉得受益匪浅。
 
-我一开始并不太理解 mod\_security 和 mod\_evasive 所谓[应用级别()的阻止与 fail2ban [网络级别]()的阻止有什么不同，对比启用 `fail2ban` 之后的现象发现，启用了 mod\_security 和 mod\_evasive 之后，网络请求还是会继续进入 Apache 处理，access 日志中还是存在大量异常的请求，只不过响应码从 404 变成了其他 403 之类，日志还是会暴涨好几个G，但是启用了 fail2ban 之后，进入 Apache 的请求明显变少了，看了下 fail2ban 的文档，发现一个老朋友 `iptables`，原来 fail2ban 在获取到恶意 IP 之后，直接通过 iptables 规则，将网络请求 reject 掉了，请求压根就不会到应用层级处理，当然就不会轮到 Apache 处理，了然，就如 OpenStack 中的安全组。
+我一开始并不太理解 mod\_security 和 mod\_evasive 所谓[应用级别]()的阻止与 fail2ban [网络级别]()的阻止有什么不同，对比启用 `fail2ban` 之后的现象发现，启用了 mod\_security 和 mod\_evasive 之后，网络请求还是会继续进入 Apache 处理，access 日志中还是存在大量异常的请求，只不过响应码从 404 变成了其他 403 之类，日志还是会暴涨好几个G，但是启用了 fail2ban 之后，进入 Apache 的请求明显变少了，看了下 fail2ban 的文档，发现一个老朋友 `iptables`，原来 fail2ban 在获取到恶意 IP 之后，直接通过 iptables 规则，将网络请求 reject 掉了，请求压根就不会到应用层级处理，当然就不会轮到 Apache 处理，了然，就如 OpenStack 中的安全组。
 
 {% highlight bash %}
 
