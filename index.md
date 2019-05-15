@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Hello World OpenStack!
+title: Hello World OpenLab!
 tagline: regexisart
 ---
 {% include JB/setup %}
@@ -15,20 +15,22 @@ tagline: regexisart
 
 ## Doing list
 
-- Nova
-- NFV
-- QEMU/KVM
-- git
+- ARM
+- OpenLab
+- CICD
 
 ## Tips
 
 {% highlight python %}
 
 if __name__ == '__main__':
-    print 'Hello World OpenStack!'
+    print 'Hello World OpenLab!'
 
 {% endhighlight %}
 
 ----------
 
-陈锐 Rui Chen @kiwik at sina chenrui.momo@gmail.com
+陈锐
+RuiChen
+@kiwik at weibo.com
+chenrui.momo@gmail.com
