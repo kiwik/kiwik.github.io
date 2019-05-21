@@ -1,0 +1,249 @@
+---
+layout: post
+category : ARM
+tagline : "regexisart"
+tags : [ARM, aarch64, Hadoop, CentOS, Java, OpenLab]
+---
+{% include JB/setup %}
+
+**如需转载，请标明原文出处以及作者**
+
+*陈锐 RuiChen @kiwik*
+
+*2019/05/20 14:22:08*
+
+----------
+
+## 背景 ##
+
+现在很多云计算厂商都对外发布了ARM实例，基础设施具备的前提下，需要验证一下ARM的服务器端软件
+生态是否完备，以便支持用户的业务。我们在很多开源项目中了解到的情况是，几乎所有的项目维护者
+都对于支持ARM版本持积极态度，但问题是很多项目都没有ARM的CI验证环境，导致在没有验证的前提下
+开源项目维护者无法对外声称支持ARM，这个问题我们计划在[OpenLab](https://openlabtesting.org)
+中提供ARM CI给开源项目，解决ARM验证环境缺失的问题。
+
+为了评估主流开源软件对于ARM的支持情况，我们考虑在ARM系统上对于这些软件编译，部署和验证。
+今天我要在`aarch64`环境上对于Hadoop v3.2.0版本进行编译，其中包括了`native`模块，涉及到了
+一些C代码的编译和本地库的使用。
+
+## 系统环境 ##
+
+ARM的服务器端软件生态比预料中成熟度高，很多的基础组件都有对应的ARM版本，并都集成在对应的
+操作系统软件仓库中。
+
+- OS: CentOS 7
+- Arch: aarch64
+- Instance: 华为云ARM公测实例
+- CentOS/Maven repo: Ali公共仓库
+
+```bash
+[root@arm-chenrui hadoop]# lsb_release -a
+LSB Version:    :core-4.1-aarch64:core-4.1-noarch:cxx-4.1-aarch64:cxx-4.1-noarch:desktop-4.1-aarch64:desktop-4.1-noarch:languages-4.1-aarch64:languages-4.1-noarch:printing-4.1-aarch64:printing-4.1-noarch
+Distributor ID: CentOS
+Description:    CentOS Linux release 7.6.1810 (AltArch) 
+Release:        7.6.1810
+Codename:       AltArch
+[root@arm-chenrui hadoop]# uname -a
+Linux arm-chenrui 4.14.0-49.el7a.aarch64 #1 SMP Tue Apr 10 17:22:26 UTC 2018 aarch64 aarch64 aarch64 GNU/Linux
+```
+
+## 步骤 ##
+
+编译步骤参考的是Hadoop github上的[官方文档](https://github.com/apache/hadoop/blob/branch-3.2.0/BUILDING.txt)，
+由于文档使用Ubuntu，而这里我们使用CentOS所以一些依赖包的有调整。CentOS仓库中对于基础软件，
+例如：OpenJDK，Git，Maven都有aarch64的包可以直接使用，直接安装就好。对于CentOS和Maven
+仓库，国内Ali，网易和华为都有对应的镜像源，ARM环境的配置的文章也有很多，不再赘述。
+
+Java的编译器版本和Maven版本如下：
+
+```bash
+[root@arm-chenrui hadoop]# mvn --version
+Apache Maven 3.6.1 (d66c9c0b3152b2e69ee9bac180bb8fcc8e6af555; 2019-04-05T03:00:29+08:00)
+Maven home: /usr/local/src/apache-maven
+Java version: 1.8.0_212, vendor: Oracle Corporation, runtime: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.aarch64/jre
+Default locale: en_US, platform encoding: UTF-8
+OS name: "linux", version: "4.14.0-49.el7a.aarch64", arch: "aarch64", family: "unix"
+```
+
+Hadoop在pom.xml中设置了项目级的Maven repository指向了Apache的[snapshot](https://repository.apache.org/content/repositories/snapshots)
+仓库，直接在maven的全局设置中mirror所有的repo会有问题，所以只mirror central repo，并配置一个
+central repo优先。
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
+  <localRepository>/root/.m2/repository</localRepository>
+  <mirrors>
+    <mirror>
+      <mirrorOf>central</mirrorOf>
+      <name>Ali maven central mirror</name>
+      <url>http://maven.aliyun.com/repository/central</url>
+      <id>alimaven</id>
+    </mirror>
+  </mirrors>
+  <profiles>
+    <profile>
+      <repositories>
+        <repository>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+          <id>central</id>
+          <name>Maven Repository</name>
+          <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+      </repositories>
+      <id>central-first</id>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>central-first</activeProfile>
+  </activeProfiles>
+  <pluginGroups>
+    <pluginGroup>org.apache.maven.plugins</pluginGroup>
+    <pluginGroup>org.codehaus.mojo</pluginGroup>
+  </pluginGroups>
+</settings>
+```
+
+### 本地依赖库 ###
+
+Hadoop的一些native模块编译的时候，用到了一些平台相关的本地库，例如：protobuf，cmake等。
+下面的列表是我将Ubuntu替换成CentOS的所有依赖包的包名。
+
+```bash
+yum install autoconf automake libtool cmake3
+yum groupinstall "Development Tools"
+yum install zlib-devel pkgconfig openssl-devel cyrus-sasl-devel
+yum install protobuf-compiler protobuf-devel
+yum install snappy-devel bzip2-devel bzip2 fuse fuse-devel zstd
+```
+
+重点说两个包`protobuf-devel`和`cmake3`。
+
+- cmake3: 官方文档中提到安装的包是`cmake`，在CentOS 7中默认安装的cmake版本是2.8，不满足
+  Hadoop编译的要求，需要指定安装`cmake3`，并按照如下步骤配置默认cmake命令为cmake3。[参考](https://stackoverflow.com/questions/48831131/cmake-on-linux-centos-7-how-to-force-the-system-to-use-cmake3)
+
+```bash
+$ sudo alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 \
+--slave /usr/local/bin/ctest ctest /usr/bin/ctest \
+--slave /usr/local/bin/cpack cpack /usr/bin/cpack \
+--slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake \
+--family cmake
+
+$ sudo alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 \
+--slave /usr/local/bin/ctest ctest /usr/bin/ctest3 \
+--slave /usr/local/bin/cpack cpack /usr/bin/cpack3 \
+--slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 \
+--family cmake
+```
+
+- protobuf-devel: 官方文档中没有提到这个包，但是不安装会报如下错误：
+
+```bash
+[INFO] --- hadoop-maven-plugins:3.2.0:cmake-compile (cmake-compile) @ hadoop-hdfs-native-client ---
+[INFO] Running cmake /root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/src -DGENERATED_JAVAH=/root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/target/native/javah -DHADOOP_BUILD=1 -DJVM_ARCH_DATA_MODEL=64 -DREQUIRE_FUSE=false -DREQUIRE_LIBWEBHDFS=false -DREQUIRE_VALGRIND=false -G Unix Makefiles
+[INFO] with extra environment variables {}
+[WARNING] JAVA_HOME=, JAVA_JVM_LIBRARY=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.aarch64/jre/lib/aarch64/server/libjvm.so
+[WARNING] JAVA_INCLUDE_PATH=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.aarch64/include, JAVA_INCLUDE_PATH2=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.aarch64/include/linux
+[WARNING] Located all JNI components successfully.
+[WARNING] CUSTOM_OPENSSL_PREFIX = 
+[WARNING] -- Performing Test THREAD_LOCAL_SUPPORTED
+[WARNING] -- Performing Test THREAD_LOCAL_SUPPORTED - Success
+[WARNING] CMake Error at /usr/share/cmake3/Modules/FindProtobuf.cmake:465 (file):
+[WARNING]   file STRINGS file "/usr/include/google/protobuf/stubs/common.h" cannot be
+[WARNING]   read.
+[WARNING] Call Stack (most recent call first):
+[WARNING]   main/native/libhdfspp/CMakeLists.txt:45 (find_package)
+[WARNING] 
+[WARNING] 
+[WARNING] CMake Error at /usr/share/cmake3/Modules/FindProtobuf.cmake:471 (math):
+[WARNING]   math cannot parse the expression: " / 1000000": syntax error, unexpected
+[WARNING]   exp_DIVIDE, expecting exp_PLUS or exp_MINUS or exp_OPENPARENT or exp_NUMBER
+[WARNING]   (2).
+[WARNING] Call Stack (most recent call first):
+[WARNING]   main/native/libhdfspp/CMakeLists.txt:45 (find_package)
+[WARNING] 
+[WARNING] 
+[WARNING] CMake Error at /usr/share/cmake3/Modules/FindProtobuf.cmake:472 (math):
+[WARNING]   math cannot parse the expression: " / 1000 % 1000": syntax error,
+[WARNING]   unexpected exp_DIVIDE, expecting exp_PLUS or exp_MINUS or exp_OPENPARENT or
+[WARNING]   exp_NUMBER (2).
+[WARNING] Call Stack (most recent call first):
+[WARNING]   main/native/libhdfspp/CMakeLists.txt:45 (find_package)
+[WARNING] 
+[WARNING] 
+[WARNING] CMake Error at /usr/share/cmake3/Modules/FindProtobuf.cmake:473 (math):
+[WARNING]   math cannot parse the expression: " % 1000": syntax error, unexpected
+[WARNING]   exp_MOD, expecting exp_PLUS or exp_MINUS or exp_OPENPARENT or exp_NUMBER
+[WARNING]   (2).
+[WARNING] Call Stack (most recent call first):
+[WARNING]   main/native/libhdfspp/CMakeLists.txt:45 (find_package)
+[WARNING] 
+[WARNING] 
+[WARNING] CMake Warning at /usr/share/cmake3/Modules/FindProtobuf.cmake:495 (message):
+[WARNING]   Protobuf compiler version 2.5.0 doesn't match library version
+[WARNING]   ERROR.ERROR.ERROR
+[WARNING] Call Stack (most recent call first):
+[WARNING]   main/native/libhdfspp/CMakeLists.txt:45 (find_package)
+[WARNING] 
+[WARNING] 
+[WARNING] -- Could NOT find GSASL (missing: GSASL_LIBRARIES GSASL_INCLUDE_DIR) 
+[WARNING] -- Performing Test THREAD_LOCAL_SUPPORTED
+[WARNING] -- Performing Test THREAD_LOCAL_SUPPORTED - Success
+[WARNING] -- Performing Test PROTOC_IS_COMPATIBLE
+[WARNING] -- Performing Test PROTOC_IS_COMPATIBLE - Failed
+[WARNING] CMake Warning at main/native/libhdfspp/CMakeLists.txt:86 (message):
+[WARNING]   WARNING: the Protocol Buffers Library and the Libhdfs++ Library must both
+[WARNING]   be compiled with the same (or compatible) compiler.  Normally only the same
+[WARNING]   major versions of the same compiler are compatible with each other.
+[WARNING] 
+[WARNING] 
+[WARNING] -- valgrind location: MEMORYCHECK_COMMAND-NOTFOUND
+[WARNING] -- Using Cyrus SASL; link with /usr/lib64/libsasl2.so
+[WARNING] -- Syncing /root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfs/include/*.h* to /root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/target/main/native/libhdfspp/extern/include
+[WARNING] -- Syncing /root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-client/src/main/proto/*.proto to /root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/target/main/native/libhdfspp/extern/proto/hdfs
+[WARNING] -- Syncing /root/gopath/src/github.com/apache/hadoop/hadoop-common-project/hadoop-common/src/main/proto/*.proto to /root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/target/main/native/libhdfspp/extern/proto/hadoop
+[WARNING] -- Syncing /root/gopath/src/github.com/apache/hadoop/hadoop-common-project/hadoop-common/src/test/proto/*.proto to /root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/target/main/native/libhdfspp/extern/proto/hadoop_test
+[WARNING] -- Building Linux FUSE client.
+[WARNING] -- Configuring incomplete, errors occurred!
+[WARNING] See also "/root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/target/CMakeFiles/CMakeOutput.log".
+[WARNING] See also "/root/gopath/src/github.com/apache/hadoop/hadoop-hdfs-project/hadoop-hdfs-native-client/target/CMakeFiles/CMakeError.log".
+```
+
+- cmake和protobuf的最终版本为：
+
+```bash
+[root@arm-chenrui hadoop]# cmake --version
+cmake3 version 3.13.4
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+[root@arm-chenrui hadoop]# protoc --version
+libprotoc 2.5.0
+```
+
+### Hadoop版本 ###
+
+我尝试了在Hadoop的`2.8.5`，`2.9.2`，`3.2.0`和`trunk` (commit 0d1d7c86ec34fabc62c0e3844aca3733024bc172)
+版本在ARM环境上的编译，除了trunk版本之外，都可以正常编译出包，使用的Maven命令如下：
+
+```bash
+mvn clean package -Pdist,native, -DskipTests -Dtar -Dmaven.javadoc-skip=true
+```
+
+trunk版本由于引入了新模块`hadoop-yarn-csi`，导致需要使用`protoc-gen-grpc-java`的二进制
+执行文件编译*.proto文件，但是grpc没有向Maven仓库中提供对应的[1.15.1](https://search.maven.org/artifact/io.grpc/protoc-gen-grpc-java/1.15.1/pom)
+版本的aarch64包，导致编译缺少依赖包失败。2016年就有人在github上向grpc团队反馈这个[问题](https://github.com/grpc/grpc-java/issues/2202),
+但是一直没有解决。
+
+下面是具体的错误信息：
+
+[![asciicast](https://asciinema.org/a/6rN7iEPLU6eSIJTtA65WY2Sdy.svg)](https://asciinema.org/a/6rN7iEPLU6eSIJTtA65WY2Sdy)
+
+## 问题 ##
+
+通过这些调研，发现一些问题，其中最主要的一个就是Hadoop项目缺少ARM环境的CI，导致引起ARM
+环境编译失败的问题被合入主干，可能问题也会进入正式的release。虽然Apache社区有一个项目[bigtop](https://bigtop.apache.org/release-notes.html)
+对于Hadoop在多个OS和多个arch上的有集成验证，但是验证的却是Hadoop的历史版本2.8.1，不能检
+测出trunk上引入的问题。这个问题我们后续会跟Apache社区以及Hadoop项目维护者一起讨论一个解
+决方案。一种可行的方式是：OpenLab作为第三方的CI系统，提供ARM验证环境给Hadoop项目，当前
+CNCF社区的[containerd](https://github.com/containerd/containerd/pull/3242)已经接
+入OpenLab的ARM CI，当然还是要看Hadoop项目和Apache社区是否接受。

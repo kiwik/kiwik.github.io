@@ -2,7 +2,7 @@
 layout: post
 category : OpenStack
 tagline: "regexisart"
-tags : [apache, fail2ban, mod-security, mod-evasive, cicd]
+tags : [apache, fail2ban, mod-security, mod-evasive, CICD, OpenLab]
 ---
 {% include JB/setup %}
 
