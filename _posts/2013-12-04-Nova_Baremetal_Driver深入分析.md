@@ -2,7 +2,7 @@
 layout: post
 category : OpenStack
 tagline: "regexisart"
-tags : [OpenStack, nova, baremetal, Iroic, deployment]
+tags : [OpenStack, Nova, baremetal, Ironic, deployment]
 ---
 {% include JB/setup %}
 
@@ -10,7 +10,7 @@ tags : [OpenStack, nova, baremetal, Iroic, deployment]
 
 *陈锐 RuiChen @kiwik*
 
-*2013/12/04 17:01:07 *
+*2013/12/04 17:01:07*
 
 ----------
 
@@ -47,10 +47,13 @@ Nova BareMetal，我的理解就是通过OpenStack API像管理虚拟机一样�
 
 
 
-当前的形式是一个Nova Driver和KVM、XEN、Vmware在Nova中同属一层的代码结构。当前Baremetal Driver分为两部分：NodeDriver和PowerManager，NodeDriver的实现有PXE、Tilera；PowerManager的实现有IPMI、Tilera_PDU、Iboot、VirtualPower。这篇文档就介绍大家最熟悉的PXE+IPMI。
+当前的形式是一个Nova Driver和KVM、XEN、Vmware在Nova中同属一层的代码结构。当前Baremetal
+Driver分为两部分：NodeDriver和PowerManager，NodeDriver的实现有PXE、Tilera；
+PowerManager的实现有IPMI、Tilera_PDU、Iboot、VirtualPower。这篇文档就介绍大家最熟悉的PXE+IPMI。
 
-
-Nova BareMetal Driver从OpenStack Grizzly版本加入，当前已经从Nova中分离出来，成为一个孵化项目**Ironic**，社区计划Ironic成熟之后，BareMetal就从中Nova中废弃。在Havana版本中的Nova v3 API已经不支持baremetal的扩展，baremetal的扩展API仅在v2 API中出现。
+Nova BareMetal Driver从OpenStack Grizzly版本加入，当前已经从Nova中分离出来，成为一个
+孵化项目**Ironic**，社区计划Ironic成熟之后，BareMetal就从中Nova中废弃。在Havana版本中
+的Nova v3 API已经不支持baremetal的扩展，baremetal的扩展API仅在v2 API中出现。
 
 ## 术语表
 
@@ -91,52 +94,46 @@ Nova BareMetal Driver从OpenStack Grizzly版本加入，当前已经从Nova中�
 
 2. 修改nova的配置文件，**wiki**原文中说如下的配置都需要加入nova-compute host，但是明显scheduler_host_manager、ram_allocation_ratio和reserved_host_memory_mb应该在scheduler节点配置，其他配置项加入nova-compute host。
     
-        {% highlight ini linenos %}
-        
-        [DEFAULT]
-        scheduler_host_manager = nova.scheduler.baremetal_host_manager.BaremetalHostManager
-        firewall_driver = nova.virt.firewall.NoopFirewallDriver
-        compute_driver = nova.virt.baremetal.driver.BareMetalDriver
-        ram_allocation_ratio = 1.0
-        reserved_host_memory_mb = 0
-        
-        [baremetal]
-        net_config_template = /opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template
-        tftp_root = /tftpboot
-        power_manager = nova.virt.baremetal.ipmi.IPMI
-        driver = nova.virt.baremetal.pxe.PXE
-        instance_type_extra_specs = cpu_arch:{i386|x86_64}
-        sql_connection = mysql://{user}:{pass}@{host}/nova_bm
-        
-        {% endhighlight %}
+    ```ini        
+    [DEFAULT]
+    scheduler_host_manager = nova.scheduler.baremetal_host_manager.BaremetalHostManager
+    firewall_driver = nova.virt.firewall.NoopFirewallDriver
+    compute_driver = nova.virt.baremetal.driver.BareMetalDriver
+    ram_allocation_ratio = 1.0
+    reserved_host_memory_mb = 0
+    
+    [baremetal]
+    net_config_template = /opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template
+    tftp_root = /tftpboot
+    power_manager = nova.virt.baremetal.ipmi.IPMI
+    driver = nova.virt.baremetal.pxe.PXE
+    instance_type_extra_specs = cpu_arch:{i386|x86_64}
+    sql_connection = mysql://{user}:{pass}@{host}/nova_bm
+    ```
     
 3. 在nova-compute host安装IPMI和PXE需要的软件dnsmasq ipmitool open-iscsi syslinux。
 
 4. 为了支持PXE需要配置pxelinux.0引导程序、pxelinux.cfg和tftp的boot根目录。PXE相关内容可以参考[here](http://blog.csdn.net/trochiluses/article/details/11736119)
     
-        {% highlight bash linenos %}
-        
-        sudo mkdir -p /tftpboot/pxelinux.cfg
-        sudo cp /usr/lib/syslinux/pxelinux.0 /tftpboot/
-        sudo chown -R $NOVA_USER /tftpboot
-        
-        sudo mkdir -p $NOVA_DIR/baremetal/dnsmasq
-        sudo mkdir -p $NOVA_DIR/baremetal/console
-        sudo chown -R $NOVA_USER $NOVA_DIR/baremetal
-        
-        {% endhighlight %}
+    ```bash
+    sudo mkdir -p /tftpboot/pxelinux.cfg
+    sudo cp /usr/lib/syslinux/pxelinux.0 /tftpboot/
+    sudo chown -R $NOVA_USER /tftpboot
+    
+    sudo mkdir -p $NOVA_DIR/baremetal/dnsmasq
+    sudo mkdir -p $NOVA_DIR/baremetal/console
+    sudo chown -R $NOVA_USER $NOVA_DIR/baremetal
+    ```
     
 5. 当前使用Baremetal，至少需要keystone、nova、neutron、glance、nova-compute、dnsmasq和nova-baremetal-deploy-helper这些服务。
     
-        {% highlight bash linenos %}
-        
-        # Start dnsmasq for baremetal deployments. Change IFACE and RANGE as needed.
-        # Note that RANGE must not overlap with the instance IPs assigned by Nova or Neutron.
-        sudo dnsmasq --conf-file= --port=0 --enable-tftp --tftp-root=/tftpboot \
-          --dhcp-boot=pxelinux.0 --bind-interfaces --pid-file=/var/run/dnsmasq.pid \
-          --interface=$IFACE --dhcp-range=$RANGE
-        
-        {% endhighlight %}
+    ```bash
+    # Start dnsmasq for baremetal deployments. Change IFACE and RANGE as needed.
+    # Note that RANGE must not overlap with the instance IPs assigned by Nova or Neutron.
+    sudo dnsmasq --conf-file= --port=0 --enable-tftp --tftp-root=/tftpboot \
+      --dhcp-boot=pxelinux.0 --bind-interfaces --pid-file=/var/run/dnsmasq.pid \
+      --interface=$IFACE --dhcp-range=$RANGE
+    ```
         
     上面dnsmasq的启动参数中包括了pxe启动的引导程序pxelinux.0和部署镜像的tftp根目录位置/tftpboot。这里为了避免neutron-dhcp相应PXE启动的dhcp请求，neutron-dhcp需要停止。
     
@@ -144,80 +141,67 @@ Nova BareMetal Driver从OpenStack Grizzly版本加入，当前已经从Nova中�
 
 7. 准备镜像，通过openstack社区提供的diskimage-builder创建镜像
     
-        {% highlight bash linenos %}
-        
-        git clone https://github.com/openstack/diskimage-builder.git
-        cd diskimage-builder
-        
-        # build the image your users will run
-        bin/disk-image-create -u base -o my-image
-        # and extract the kernel & ramdisk
-        bin/disk-image-get-kernel -d ./ -o my -i $(pwd)/my-image.qcow2
-        
-        # build the deploy image
-        bin/ramdisk-image-create deploy -a i386 -o my-deploy-ramdisk
-        
-        {% endhighlight %}
+    ```bash
+    git clone https://github.com/openstack/diskimage-builder.git
+    cd diskimage-builder
+    
+    # build the image your users will run
+    bin/disk-image-create -u base -o my-image
+    # and extract the kernel & ramdisk
+    bin/disk-image-get-kernel -d ./ -o my -i $(pwd)/my-image.qcow2
+    
+    # build the deploy image
+    bin/ramdisk-image-create deploy -a i386 -o my-deploy-ramdisk
+    ```
     
 8. 将这些镜像文件上传至glance
     
-        {% highlight bash linenos %}
-        
-        glance image-create --name my-vmlinuz --public --disk-format aki  < my-vmlinuz
-        
-        glance image-create --name my-initrd --public --disk-format ari  <my-initrd
-        
-        glance image-create --name my-image --public --disk-format qcow2 --container-format bare \
-            --property kernel_id=$MY_VMLINUZ_UUID --property ramdisk_id=$MY_INITRD_UUID <my-image
-        
-        glance image-create --name deploy-vmlinuz --public --disk-format aki <vmlinuz-$KERNEL
-        
-        glance image-create --name deploy-initrd --public --disk-format ari <my-deploy-ramdisk.initramfs
-        
-        {% endhighlight %}
+    ```bash
+    glance image-create --name my-vmlinuz --public --disk-format aki  < my-vmlinuz
+    
+    glance image-create --name my-initrd --public --disk-format ari  <my-initrd
+    
+    glance image-create --name my-image --public --disk-format qcow2 --container-format bare \
+        --property kernel_id=$MY_VMLINUZ_UUID --property ramdisk_id=$MY_INITRD_UUID <my-image
+    
+    glance image-create --name deploy-vmlinuz --public --disk-format aki <vmlinuz-$KERNEL
+    
+    glance image-create --name deploy-initrd --public --disk-format ari <my-deploy-ramdisk.initramfs
+    ```
     
 9. 在nova中创建baremetal专用的flavor，其中cpu_arch、deploy_kernel_id和deploy_ramdisk_id要和compute host的nova.conf中的deploy_kernel、deploy_ramdisk和instance_type_extra_specs配置一致
     
-        {% highlight ini linenos %}
-        
-        instance_type_extra_specs = cpu_arch:{i386|x86_64}
-        
-        deploy_kernel = $DEPLOY_VMLINUZ_UUID
-        
-        deploy_ramdisk = $DEPLOY_INITRD_UUID
-        
-        {% endhighlight %}
+    ```ini
+    instance_type_extra_specs = cpu_arch:{i386|x86_64}
+    
+    deploy_kernel = $DEPLOY_VMLINUZ_UUID
+    
+    deploy_ramdisk = $DEPLOY_INITRD_UUID
+    ```
     
 10. 创建nova的flavor
     
-        {% highlight bash linenos %}
-        
-        nova flavor-create my-baremetal-flavor $RAM $DISK $CPU
-        # cpu_arch must match nova.conf, and of course, also must match your hardware
-        nova flavor-key my-baremetal-flavor set \
-             cpu_arch={i386|x86_64} \
-             "baremetal:deploy_kernel_id"=$DEPLOY_VMLINUZ_UUID \
-             "baremetal:deploy_ramdisk_id"=$DEPLOY_INITRD_UUID
-        
-        {% endhighlight %}
+    ```bash
+    nova flavor-create my-baremetal-flavor $RAM $DISK $CPU
+    # cpu_arch must match nova.conf, and of course, also must match your hardware
+    nova flavor-key my-baremetal-flavor set \
+         cpu_arch={i386|x86_64} \
+         "baremetal:deploy_kernel_id"=$DEPLOY_VMLINUZ_UUID \
+         "baremetal:deploy_ramdisk_id"=$DEPLOY_INITRD_UUID
+    ```
     
 11. 将物理服务器信息注册到环境中，hostname、mac、cpu、ram、disk信息和IPMI的IP、user、password，然后将服务器的所有网络接口也注册进环境
     
-        {% highlight bash linenos %}
-        
-        nova baremetal-node-create --pm_address=... --pm_user=... --pm_password=... \
-          $COMPUTE-HOST-NAME $CPU $RAM $DISK $FIRST-MAC
-        
-        nova baremetal-interface-add $ID $MAC
-        
-        {% endhighlight %}
+    ```bash
+    nova baremetal-node-create --pm_address=... --pm_user=... --pm_password=... \
+      $COMPUTE-HOST-NAME $CPU $RAM $DISK $FIRST-MAC
     
-
+    nova baremetal-interface-add $ID $MAC
+    ```
+    
 ## Baremetal driver的创建虚拟机流程
 
-
 - 流程图
-
 
 ![baremetal workflow](https://raw.github.com/kiwik/kiwik.github.io/master/_posts_images/2013-12-13/baremetal.png)
 
@@ -252,71 +236,69 @@ Nova BareMetal Driver从OpenStack Grizzly版本加入，当前已经从Nova中�
 
 6. diskimage-builder也是OpenStack项目下的一个image制作工具，属于**TripleO**的一部分。这部分了解的不是很多，一个镜像制作工具，可以制作cloudimage和deployimage，在制作镜像的过程中，可以安装需要的软件和脚本，如果没有猜错的话这些都应该叫**elements**，文档的开始baremetal的image也是通diskimage-builder制作的，还导出了deploy-ramdisk和deploy-kernel，上面那个向nova-baremetal-deploy-helper发送10000 POST消息的脚本就是在deploy-ramdisk中执行的，千辛万苦的终于在github的`diskimage-builder/elements/deploy/init.d/80-deploy`的仓库里发现了这样一段代码：
     
-        {% highlight bash linenos %}
-        
-         if [ -z "$ISCSI_TARGET_IQN" ]; then
-        
-         err_msg "iscsi_target_iqn is not defined"
-        
-         troubleshoot
-        
-        fi
-        
-        t=0
-        
-        while ! target_disk=$(find_disk "$DISK"); do
-        
-         if [ $t -eq 10 ]; then
-        
-           break
-        
-         fi
-        
-         t=$(($t + 1))
-        
-         sleep 1
-        
-        done
-        
-        if [ -z "$target_disk" ]; then
-        
-         err_msg "Could not find disk to use."
-        
-         troubleshoot
-        
-        fi
-        
-        echo "start iSCSI target on $target_disk"
-        
-        start_iscsi_target "$ISCSI_TARGET_IQN" "$target_disk" ALL
-        
-        if [ $? -ne 0 ]; then
-        
-         err_msg "Failed to start iscsi target."
-        
-         troubleshoot
-        
-        fi
-        
-        echo "request boot server to deploy image"
-        
-        d="i=$DEPLOYMENT_ID&k=$DEPLOYMENT_KEY&a=$BOOT_IP_ADDRESS&n=$ISCSI_TARGET_IQN&e=$FIRST_ERR_MSG"
-        
-        wget --post-data "$d" "http://$BOOT_SERVER:10000"
-        
-        echo "waiting for notice of complete"
-        
-        nc -l -p 10000
-        
-        echo "stop iSCSI target on $target_disk"
-        
-        stop_iscsi_target
-        
-        {% endhighlight %}
+    ```bash
+     if [ -z "$ISCSI_TARGET_IQN" ]; then
+    
+     err_msg "iscsi_target_iqn is not defined"
+    
+     troubleshoot
+    
+    fi
+    
+    t=0
+    
+    while ! target_disk=$(find_disk "$DISK"); do
+    
+     if [ $t -eq 10 ]; then
+    
+       break
+    
+     fi
+    
+     t=$(($t + 1))
+    
+     sleep 1
+    
+    done
+    
+    if [ -z "$target_disk" ]; then
+    
+     err_msg "Could not find disk to use."
+    
+     troubleshoot
+    
+    fi
+    
+    echo "start iSCSI target on $target_disk"
+    
+    start_iscsi_target "$ISCSI_TARGET_IQN" "$target_disk" ALL
+    
+    if [ $? -ne 0 ]; then
+    
+     err_msg "Failed to start iscsi target."
+    
+     troubleshoot
+    
+    fi
+    
+    echo "request boot server to deploy image"
+    
+    d="i=$DEPLOYMENT_ID&k=$DEPLOYMENT_KEY&a=$BOOT_IP_ADDRESS&n=$ISCSI_TARGET_IQN&e=$FIRST_ERR_MSG"
+    
+    wget --post-data "$d" "http://$BOOT_SERVER:10000"
+    
+    echo "waiting for notice of complete"
+    
+    nc -l -p 10000
+    
+    echo "stop iSCSI target on $target_disk"
+    
+    stop_iscsi_target
+    ```
     
 7. 这段代码其实也间接的回答了我的第二个问题，为什么要用iscsi？baremetal node通过deploy ramdisk将disk通过iscsi暴露给了nova-compute host，然后在nova-baremetal-deploy-helper进程中获取baremetal node的disk的iscsi iqn，然后将用户指定的image dd到这个iscsi target中，完成对于baremetal node的系统盘安装，然后给baremetal node的10000端口发一个done的socket消息，通知baremetal node停止iscsi。
 
-> 以上就是我对于baremetal的一点分析，说实话老外解决问题使用的一些方案，真不是我们轻易可以想得到的。
+以上就是我对于baremetal的一点分析，说实话老外解决问题使用的一些方案，真不是我们轻易可以想得到的。
 
 ## 参考文献
 
