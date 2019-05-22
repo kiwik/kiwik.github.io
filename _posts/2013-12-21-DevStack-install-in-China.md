@@ -10,14 +10,14 @@ tags : [OpenStack, DevStack, install, pip, apt-get, Ubuntu]
 
 *陈锐 RuiChen @kiwik*
 
-*2013/12/21 16:28:59 *
+*2013/12/21 16:28:59*
 
 ----------
-
 
 标题取得有点大，不过我觉得中国的开发者应该能够理解，在中国用DevStack搭建一套OpenStack环境究竟有多麻烦，中间会出多少不能预知的问题，在这里分享一下我的做法。
 
 [DevStack](http://devstack.org/guides/single-vm.html)可是号称的5分钟安装好OpenStack的
+
 > Use your cloud to launch new versions of OpenStack in about 5 minutes.
 
 ## step0
@@ -28,11 +28,9 @@ tags : [OpenStack, DevStack, install, pip, apt-get, Ubuntu]
 
 ssh登录虚拟机，使用的是Vagrant，所以默认使用vagrant用户登录，在`/home/vagrant`目录下，先安装git
 
-{% highlight bash linenos%}
-
+```bash
 sudo apt-get install git
-
-{% endhighlight %}
+```
 
 这里提醒一下使用Vagrant的时候ssh登录到虚拟机上，很多命令都要使用sudo
 
@@ -40,11 +38,9 @@ sudo apt-get install git
 
 将DevStack git clone到虚拟机上
 
-{% highlight bash linenos%}
-
+```bash
 git clone https://github.com/openstack-dev/devstack.git
-
-{% endhighlight %}
+```
 
 ## step3
 
@@ -54,16 +50,13 @@ git clone https://github.com/openstack-dev/devstack.git
 
 将Ubuntu默认的源改成国内的源地址，大家一定很熟悉了，这里贴一个例子，是我这里最快的搜狐的源
 
-{% highlight bash linenos%}
-
+```bash
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
 
 vim /etc/apt/sources.list
+```
 
-{% endhighlight %}
-
-{% highlight bash %}
-
+```
 deb http://mirrors.sohu.com/ubuntu/ precise-updates main restricted
 deb-src http://mirrors.sohu.com/ubuntu/ precise-updates main restricted
 deb http://mirrors.sohu.com/ubuntu/ precise universe
@@ -76,8 +69,7 @@ deb http://mirrors.sohu.com/ubuntu/ precise-updates multiverse
 deb-src http://mirrors.sohu.com/ubuntu/ precise-updates multiverse
 deb http://mirrors.sohu.com/ubuntu/ precise-backports main restricted universe multiverse
 deb-src http://mirrors.sohu.com/ubuntu/ precise-backports main restricted universe multiverse
-
-{% endhighlight %}
+```
 
 ## step5
 
@@ -97,34 +89,28 @@ to
 
 创建`~/.pip/pip.conf`文件，将pip的源配置成国内的源，超时时间也调长
 
-{% highlight ini %}
-
+```ini
 [global]
 timeout = 6000
 index-url = http://e.pypi.python.org/simple
 [install]
 use-mirrors = true
 mirrors = http://e.pypi.python.org
-
-{% endhighlight %}
-
+```
 
 ## step7
 
 可以执行`./stack.sh`了，速度刷刷的
 
-
-> PS：另外还有一个方法可以试试，如果你有很强大的代理，可以直接在localrc中设置代理`http_proxy` `https_proxy` `no_proxy`三个常量，stack.sh脚本会将这个三个设置应用到安装过程中，不过我这里没有成功，在curl下载https的pip时，报了ssl证书错误。
+PS：另外还有一个方法可以试试，如果你有很强大的代理，可以直接在localrc中设置代理`http_proxy` `https_proxy` `no_proxy`三个常量，stack.sh脚本会将这个三个设置应用到安装过程中，不过我这里没有成功，在curl下载https的pip时，报了ssl证书错误。
 
 使用Vagrant的时候，如果虚拟机需要使用主机代理，首先找到默认网关，默认网关加上代理端口就可以了，我用的是goagent，所以配置就是这样了
 
-{% highlight bash %}
-
+```ini
 http_proxy="10.0.2.2:8087"
 https_proxy="10.0.2.2:8087"
 no_proxy="127.0.0.1"
-
-{% endhighlight %}
+```
 
 ![][1]
 

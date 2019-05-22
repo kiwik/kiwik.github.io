@@ -21,12 +21,10 @@ tagline: regexisart
 
 ## Tips
 
-{% highlight python %}
-
+```python
 if __name__ == '__main__':
-    print 'Hello World OpenLab!'
-
-{% endhighlight %}
+    print('Hello World OpenLab!')
+```
 
 ----------
 
