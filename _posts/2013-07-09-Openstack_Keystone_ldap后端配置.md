@@ -10,7 +10,7 @@ tags : [OpenStack, keystone, LDAP]
 
 *陈锐 RuiChen @kiwik*
 
-*2013/07/09 23:16:50 *
+*2013/07/09 23:16:50*
 
 ----------
 
@@ -22,9 +22,10 @@ tags : [OpenStack, keystone, LDAP]
 
 ## 安装LDAP
 
-> apt-get install ldap-utils
-> 
-> apt-get install slapd
+```bash
+apt-get install ldap-utils
+apt-get install slapd
+```
 
 ## 验证LDAP登录
 
@@ -38,7 +39,7 @@ ldap安装默认根据当前主机的域名，生成登陆的DN
 
 使用此命令验证是否配置成功
 
-> ldapsearch -x -LLL -H ldap:/// -b dc=openstack,dc=org dn
+`ldapsearch -x -LLL -H ldap:/// -b dc=openstack,dc=org dn`
 
 ![][2]
 
@@ -47,9 +48,9 @@ ldap安装默认根据当前主机的域名，生成登陆的DN
 LDAP的默认schema不能直接和openstack配合使用，有些openstack的用户、角色、租户需要的属性默认schema中没有，例如：enable，description等等，需要修改；其次，需要添加存储openstack相关模型（user，tenant，group，role，domain）的dn，以便保存数据。
 我自己写了两个ldif文件，以便完成上面两件事，内容如下：
 
-`modify.ldif`
+> modify.ldif
 
-{% highlight bash %}
+```txt
 
 dn: cn={0}core,cn=schema,cn=config  
 changetype: modify  
@@ -72,16 +73,15 @@ olcObjectClasses: {0}( 2.16.840.1.113730.3.2.2 NAME 'inetOrgPerson' DESC 'RFC279
 add: olcObjectClasses  
 olcObjectClasses: {0}( 2.16.840.1.113730.3.2.2 NAME 'inetOrgPerson' DESC 'RFC2798: Internet Organizational Person' SUP organizationalPerson STRUCTURAL MAY ( audio $ businessCategory $ carLicense $ departmentNumber $ displayName $ employeeNumber $ employeeType $ givenName $ homePhone $ homePostalAddress $ initials $ jpegPhoto $ labeledURI $ mail $ manager $ mobile $ o $ pager $ photo $ roomNumber $ secretary $ uid $ userCertificate $ x500uniqueIdentifier $ preferredLanguage $ userSMIMECertificate $ userPKCS12 $ description $ enabled $ email ) )
 
-{% endhighlight %}
+```
 
 将以上内容保存到对应的文件之后，执行如下命令：
 
-> ldapmodify -c -Y EXTERNAL -H ldapi:/// -f modify.ldif
+`ldapmodify -c -Y EXTERNAL -H ldapi:/// -f modify.ldif`
 
-`add.ldif`
+> add.ldif
 
-{% highlight bash %}
-
+```txt
 dn: ou=users,dc=openstack,dc=org  
 objectClass: top  
 objectClass: organizationalUnit  
@@ -101,32 +101,28 @@ objectClass: organizationalUnit
 dn: ou=domains,dc=openstack,dc=org  
 objectClass: top  
 objectClass: organizationalUnit  
-
-{% endhighlight %}
+```
 
 将以上内容保存到对应的文件之后，执行如下命令：
 
-> ldapadd -x -c -D"cn=admin,dc=openstack,dc=org" -w "Galax8800" -f add.ldif
+`ldapadd -x -c -D"cn=admin,dc=openstack,dc=org" -w "Galax8800" -f add.ldif`
 
 注意Galax8800是安装LDAP的时候，输入的root密码
 
 ## 修改keystone的配置文件
 
-`/etc/keystone/keystone.conf`
+> /etc/keystone/keystone.conf
 
 将Identity的后端配置为ldap
 
-{% highlight ini linenos %}
-
+```ini
 [identity]  
 driver = keystone.identity.backends.ldap.Identity  
-
-{% endhighlight %}
+```
 
 增加ldap段的配置，只需如下配置，其他可以使用默认值
 
-{% highlight ini linenos %}
-
+```ini
 [ldap]  
 url = ldap://localhost  
 user = cn=admin,dc=openstack,dc=org  
@@ -140,8 +136,7 @@ tenant_tree_dn = ou=projects,dc=openstack,dc=org
 role_tree_dn = ou=roles,dc=openstack,dc=org  
 group_tree_dn = ou=groups,dc=openstack,dc=org  
 domain_tree_dn = ou=domains,dc=openstack,dc=org  
-
-{% endhighlight %}
+```
 
 注意：password = `Galax8800` 此密码为当时安装LDAP时，输入的root密码
 
@@ -151,23 +146,11 @@ domain_tree_dn = ou=domains,dc=openstack,dc=org
 
 这个步骤网上的一些外国大牛已经提供了一些脚本，这里为了流程完整，就提供一个参考版本
 
-`keystone_basic.sh`
+> keystone_basic.sh
 
-{% highlight bash linenos %}
-
+```bash
 #!/bin/sh  
-#  
-# Keystone basic configuration   
-  
-# Mainly inspired by https://github.com/openstack/keystone/blob/master/tools/sample_data.sh  
-  
-# Modified by Bilel Msekni / Institut Telecom  
-#  
-# Support: openstack@lists.launchpad.net  
-# License: Apache Software License (ASL) 2.0  
-#  
-#. /root/novarc  
-#HOST_IP=${MASTER}  
+
 ADMIN_PASSWORD=Galax8800  
 SERVICE_PASSWORD=Galax8800  
 SERVICE_TENANT_NAME=${SERVICE_TENANT_NAME:-service}  
@@ -210,12 +193,11 @@ keystone user-role-add --tenant-id $SERVICE_TENANT --user-id $QUANTUM_USER --rol
   
 CINDER_USER=$(get_id keystone user-create --name=cinder --pass="$SERVICE_PASSWORD" --email=cinder@domain.com)  
 keystone user-role-add --tenant-id $SERVICE_TENANT --user-id $CINDER_USER --role-id $ADMIN_ROLE  
-
-{% endhighlight %}
+```
 
 将以上内容保存到对应的文件之后，执行如下命令：
 
-> sh keystone_basic.sh
+`sh keystone_basic.sh`
 
 ## 验证keystone
 
@@ -253,8 +235,7 @@ keystone user-role-add --tenant-id $SERVICE_TENANT --user-id $CINDER_USER --role
 
 写了一个脚本将以上步骤全部实现
 
-{% highlight bash linenos %}
-
+```bash
 #!/bin/bash  
   
 # ubunut 12.04 LTS keystone G 2013.1 openldap 2.4.28  
@@ -504,9 +485,8 @@ modify_ldap_schema
 modify_keystone_conf  
 init_keystone  
 check_keystone  
-restart_openstack_all_service  
-
-{% endhighlight %}
+restart_openstack_all_service
+```
 
 脚本中包括：
 
@@ -528,7 +508,7 @@ restart_openstack_all_service
 
 运行自动化脚本
 
-> bash config_keystone_ldap.sh
+`bash config_keystone_ldap.sh`
 
 默认LDAP密码为`Galax8800`
 
