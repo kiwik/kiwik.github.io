@@ -8,7 +8,7 @@ tags : [git, review, gerrit, ssh, http, vpn, socks]
 
 **如需转载，请标明原文出处以及作者**
 
-*陈锐 ruichen @kiwik*
+*陈锐 RuiChen @kiwik*
 
 *2014/8/26 21:05:44*
 

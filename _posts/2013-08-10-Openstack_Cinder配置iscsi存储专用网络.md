@@ -8,7 +8,7 @@ tags : [OpenStack, cinder, nova, iscsi, volume, 可靠性]
 
 **如需转载，请标明原文出处以及作者**
 
-*陈锐 ruichen @kiwik*
+*陈锐 RuiChen @kiwik*
 
 *2013/08/10 20:23:29 *
 

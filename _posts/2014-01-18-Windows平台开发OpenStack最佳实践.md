@@ -8,7 +8,7 @@ tags : [OpenStack, develop, win-sshfs, git, DevStack]
 
 **如需转载，请标明原文出处以及作者**
 
-*陈锐 ruichen @kiwik*
+*陈锐 RuiChen @kiwik*
 
 *2014/1/18 21:41:58 *
 

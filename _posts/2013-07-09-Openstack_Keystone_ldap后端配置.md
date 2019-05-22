@@ -8,7 +8,7 @@ tags : [OpenStack, keystone, LDAP]
 
 **如需转载，请标明原文出处以及作者**
 
-*陈锐 ruichen @kiwik*
+*陈锐 RuiChen @kiwik*
 
 *2013/07/09 23:16:50 *
 

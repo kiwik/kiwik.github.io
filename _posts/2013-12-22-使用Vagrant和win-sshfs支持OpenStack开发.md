@@ -8,7 +8,7 @@ tags : [OpenStack, Vagrant, develop, win-sshfs, DevStack]
 
 **如需转载，请标明原文出处以及作者**
 
-*陈锐 ruichen @kiwik*
+*陈锐 RuiChen @kiwik*
 
 *2013/12/22 19:16:36 *
 

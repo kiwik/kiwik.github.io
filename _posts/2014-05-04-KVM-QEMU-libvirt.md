@@ -8,7 +8,7 @@ tags : [OpenStack, KVM, QEMU, libvirt]
 
 **如需转载，请标明原文出处以及作者**
 
-*陈锐 Rui Chen @kiwik*
+*陈锐 RuiChen @kiwik*
 
 *2014/5/4 17:53:39 *
 

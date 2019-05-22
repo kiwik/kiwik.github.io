@@ -8,7 +8,7 @@ tags : [OpenStack, keystone, domain, policy]
 
 **如需转载，请标明原文出处以及作者**
 
-*陈锐 ruichen @kiwik*
+*陈锐 RuiChen @kiwik*
 
 *2014/3/16 17:51:36 *
 
