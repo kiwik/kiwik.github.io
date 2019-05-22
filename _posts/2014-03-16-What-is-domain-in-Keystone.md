@@ -18,7 +18,7 @@ Keystone的domain概念刚出现的时候，看了一下当时的blue print，�
 
 随着OpenStack的发展，domain又被赋予了新的职责，而不仅仅作为一个namespace使用，让我们来看看它到底还能做些什么？
 
-##相关对象
+## 相关对象 ##
 
 Keystone中当前和domain相关的对象有user，project，group和token，其中user，project和group从sql driver看，这三个模型的name字段都和domain_id一起作为联合唯一键在数据库层面增加了约束。
 
@@ -34,7 +34,7 @@ token比较特殊，获取V3 token的时候有一个可选参数`scope`，来指
 
 token实际的scope最终转化为两种domain和project。
 
-##授权
+## 授权 ##
 
 keystone的授权（`create_grant`）过程，其实是一个三方关联的过程，三方就是：actor（被授权的主体），role（权限），target（被授权的范围）。实际授权过程可以这样理解：**为actor在target的范围内赋予role的权利**。
 
@@ -44,7 +44,7 @@ keystone的授权（`create_grant`）过程，其实是一个三方关联的过�
 
 再说回来，domain scope token包含的roles，就是这个domain范围内的所有这个user相关的role，其中包括user本身和user所属的group的role的一个并集。而project scope token包含的roles，同上，就是范围变成了project相关的role。
 
-##怎么用domain
+## 怎么用domain ##
 
 keystone默认的**policy.json**，其实是拥有admin角色的用户可以做任何的事情，可以在domainA中创建project，也可以在domainB中创建project，这样就无法做到，限制domain内的admin只可以在所属domain内创建project，也就是**domain admin**的概念，为了弥补这一问题，keystone引入了`policy.v3cloudsample.json`。
 
