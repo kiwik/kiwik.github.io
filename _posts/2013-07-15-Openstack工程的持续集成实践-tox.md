@@ -51,12 +51,10 @@ tox的官方对于tox的定义是这样的：
 
 首先定义tox的全局配置，列出了需要执行的虚拟环境列表，在命令行中直接执行tox，就会依次执行py26，py27，pep8
 
-{% highlight ini linenos %}
-
+```markdown
 [tox]  
 envlist = py26,py27,pep8 
-
-{% endhighlight %}
+```
 
 然后定义了虚拟环境的配置
 
@@ -66,8 +64,7 @@ envlist = py26,py27,pep8
 
 - commands就是在当前虚拟环境中需要执行的命令，python tools/patch_tox_venv.py就是安装了redhat-eventlet.patch补丁；nosetests {posargs}就是执行nose进行单元测试，{posargs}参数就是可以将tox的参数传递给nosetests，例如：`tox -- --with-coverage`执行的时候就是`nosetests --with-coverage`
 
-{% highlight ini linenos %}
-
+```markdown
 [testenv]  
 setenv = VIRTUAL_ENV={envdir}  
          NOSE_WITH_OPENSTACK=1  
@@ -80,54 +77,45 @@ deps = -r{toxinidir}/requirements.txt
        -r{toxinidir}/test-requirements.txt  
 commands = python tools/patch_tox_venv.py  
            nosetests {posargs}  
-
-{% endhighlight %}
+```
 
 自定义了一个pep8的代码静态检查的虚拟环境，执行flake8 --filename=keystone\* bin
 
-{% highlight ini linenos %}
-
+```markdown
 [testenv:pep8]  
 commands =  
   flake8  
   flake8 --filename=keystone* bin  
-
-{% endhighlight %}
+```
 
 定义了和CI server jenkins的集成配置，指定了pip的下载cache目录，提高构建虚拟环境的速度
 
-{% highlight ini linenos %}
-
+```markdown
 [tox:jenkins]  
 downloadcache = ~/cache/pip 
+```
 
-{% endhighlight %}
 
 定义一个cover的虚拟环境，就是指定了一些环境变量，使单元测试的时候，自动应用coverage，并定义了coverage生成的html报告目录
 
-{% highlight ini linenos %}
-
+```markdown
 [testenv:cover]  
 setenv = VIRTUAL_ENV={envdir}  
          NOSE_WITH_COVERAGE=1  
          NOSE_COVER_HTML=1  
          NOSE_COVER_HTML_DIR={toxinidir}/cover  
-
-{% endhighlight %}
+```
 
 这个不太明白，也许就是创建一个虚拟机环境，执行一个自定义的命令行，以备扩展
 
-{% highlight ini linenos %}
-
+```markdown
 [testenv:venv]  
-commands = {posargs}  
-
-{% endhighlight %}
+commands = {posargs}
+```
 
 定义了flake8静态检查的一些细节配置
 
-{% highlight ini linenos %}
-
+```markdown
 [flake8]  
 show-source = true  
   
@@ -136,8 +124,7 @@ ignore = H304
   
 builtins = _  
 exclude=.venv,.git,.tox,dist,doc,*openstack/common*,*lib/python*,*egg,tools,vendor,.update-venv  
-
-{% endhighlight %}
+```
 
 ## 使用过程中的一些改进
 
