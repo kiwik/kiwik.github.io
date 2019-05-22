@@ -10,7 +10,7 @@ tags : [nova, host, node, service]
 
 *陈锐 RuiChen @kiwik*
 
-*2015/2/4 22:44:22 *
+*2015/2/4 22:44:22*
 
 ----------
 

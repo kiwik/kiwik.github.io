@@ -10,7 +10,7 @@ tags : [Vancouver, summit, nova]
 
 *陈锐 RuiChen @kiwik*
 
-*2015/05/19 23:35:50 *
+*2015/05/19 23:35:50*
 
 ----------
 
@@ -177,7 +177,6 @@ BlueBox的升级顺序：
 7. horizon
 
 有人问到类似Racespace的OpenStack公有云部署场景下，有很多的nova-compute节点的情况又应该怎么升级？Jesse的回答和我心里的考虑是一致的，首先，升级nova中除了compute的所有服务，其实主要是需要升级nova db schema和nova-conductor，然后，nova-compute再一个一个升级，在我看来其实应该将nova-api分离出来，等所有nova-compute升级完成，再升级nova-api，避免新接口走入老代码。当然最好配合update_level配置。详见我的blog [“Nova如何支持live Upgrade”](http://kiwik.github.io/openstack/2015/04/04/Nova%E5%A6%82%E4%BD%95%E6%94%AF%E6%8C%81live-upgrade/ "http://kiwik.github.io/openstack/2015/04/04/Nova%E5%A6%82%E4%BD%95%E6%94%AF%E6%8C%81live-upgrade/")
-
 
 ----------
 

@@ -10,7 +10,7 @@ tags : [OpenStack, nova, keystone, EC2, token]
 
 *陈锐 RuiChen @kiwik*
 
-*2014/1/4 13:56:10 *
+*2014/1/4 13:56:10*
 
 ----------
 
@@ -38,8 +38,7 @@ tags : [OpenStack, nova, keystone, EC2, token]
 
 解开zip包之后，里面就包括cacert.pem、pk.pem、cert.pem三个pem文件和一个shell脚本ec2rc.sh，以下就是ec2rc.sh的内容，使用euca2ools之前，先要执行一下 `source ec2rc.sh` ，三个pem文件是EC2 Client对于image、volume压缩打包加密时用的。
 
-{% highlight bash %}
-
+```bash
 #!/bin/bash
 
 NOVARC=$(readlink -f "${BASH_SOURCE:-${0}}" 2>/dev/null) || NOVARC=$(python -c 'import os,sys; print os.path.abspath(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE:-${0}}")
@@ -55,16 +54,15 @@ export EUCALYPTUS_CERT=${NOVA_CERT} # euca-bundle-image seems to require this se
 
 alias ec2-bundle-image="ec2-bundle-image --cert ${EC2_CERT} --privatekey ${EC2_PRIVATE_KEY} --user 42 --ec2cert ${NOVA_CERT}"
 alias ec2-upload-bundle="ec2-upload-bundle -a ${EC2_ACCESS_KEY} -s ${EC2_SECRET_KEY} --url ${S3_URL} --ec2cert ${NOVA_CERT}"
-
-{% endhighlight %}
+```
 
 其中最有用的就是以下三个环境变量，EC2\_URL就是指向nova的ec2-api，EC2_ACCESS_KEY和EC2_SECRET_KEY就是，通过keystone ec2-credentials-create创建的某project的某个用户的access\_key和secret\_key
 
-> export EC2_ACCESS_KEY=14d40f23e54148579ea559c07bfaa42a
->
-> export EC2_SECRET_KEY=921a3445e0c2485d83458251d1803219
->
-> export EC2_URL=http://172.25.16.1:8773/services/Cloud
+```bash
+export EC2_ACCESS_KEY=14d40f23e54148579ea559c07bfaa42a
+export EC2_SECRET_KEY=921a3445e0c2485d83458251d1803219
+export EC2_URL=http://172.25.16.1:8773/services/Cloud
+```
 
 ## Nova EC2 API
 
@@ -72,8 +70,7 @@ alias ec2-upload-bundle="ec2-upload-bundle -a ${EC2_ACCESS_KEY} -s ${EC2_SECRET_
 
 看一下nova的api-paste.ini里面专门有一段是关于EC2 API的配置的
 
-{% highlight ini %}
-
+```ini
 [composite:ec2]
 use = egg:Paste#urlmap
 /services/Cloud: ec2cloud
@@ -93,11 +90,9 @@ paste.filter_factory = nova.api.ec2:EC2KeystoneAuth.factory
 [filter:cloudrequest]
 controller = nova.api.ec2.cloud.CloudController
 paste.filter_factory = nova.api.ec2:Requestify.factory
-
-{% endhighlight %}
+```
 
 其中和本文相关的就是 *ec2keystoneauth* 和 *cloudrequest* 两个filter
-
 
 ## ec2keystoneauth
 
@@ -105,8 +100,7 @@ ec2keystoneauth就是用来兼容EC2类型的鉴权请求的，在这个filter�
 
 keystone接受的请求就是类似这样的
 
-{% highlight bash %}
-
+```json5
 {
     'access': '14d40f23e54148579ea559c07bfaa42a',
     'host': '172.25.16.1: 8773',
@@ -122,8 +116,7 @@ keystone接受的请求就是类似这样的
     'signature': '3zuQL78asBD+SaknEQ0BoJS6ABflN9KpR7ShaTiQK8I=',
     'path': '/services/Cloud/'
 }
-
-{% endhighlight %}
+```
 
 keystone会在Ec2Controller中的authenticate方法处理这个POST请求，通过access\_key查询证书，得到secret\_key，然后根据request参数中SignatureVersion，使用不同的签名生成方法结合secret\_key，验证请求中的Signature是否合法，以保证请求不被篡改。验证成功之后，就根据证书的user\_id和project等信息生成一个v2 token。
 
@@ -137,8 +130,7 @@ keystone返回的就是一个与环境变量$EC2\_ACCESS\_KEY和$EC2\_SECRET\_KE
 
 以下就是一个查询az的euca2ools命令行的debug输出，大家可以仔细看一下euca2ools是如何拼装EC2消息的。
 
-{% highlight bash %}
-
+```markdown
 root@C16-RH2285-01-openstack-controlor-H:/home/chenrui/test-x509# source ec2rc.sh 
 root@C16-RH2285-01-openstack-controlor-H:/home/chenrui/test-x509# env | grep EC2
 EC2_SECRET_KEY=921a3445e0c2485d83458251d1803219
@@ -194,8 +186,7 @@ header: Date: Tue, 31 Dec 2013 14:34:25 GMT
 AVAILABILITYZONE        test    available
 AVAILABILITYZONE        nova    available
 AVAILABILITYZONE        aztest001       available
-
-{% endhighlight %}
+```
 
 ## 参考链接
 

@@ -10,7 +10,7 @@ tags : [OpenStack, keystone, domain, policy]
 
 *陈锐 RuiChen @kiwik*
 
-*2014/3/16 17:51:36 *
+*2014/3/16 17:51:36*
 
 ----------
 
@@ -38,7 +38,7 @@ token实际的scope最终转化为两种domain和project。
 
 keystone的授权（`create_grant`）过程，其实是一个三方关联的过程，三方就是：actor（被授权的主体），role（权限），target（被授权的范围）。实际授权过程可以这样理解：
 
-> 为actor在target的范围内赋予role的权利。
+`为actor在target的范围内赋予role的权利。`
 
 - actor -> user & group
 - targe -> project & domain
@@ -52,17 +52,12 @@ keystone默认的**policy.json**，其实是拥有admin角色的用户可以做�
 
 我们来分析一下是怎么做到的，来看其中的一段例子，摘自policy.v3cloudsample.json
 
-{% highlight bash linenos %}
-
+```json
 "admin_required": "role:admin",
-
 "identity:create_project": "rule:admin_required and domain_id:%(project.domain_id)s",
-
 "identity:get_project": "rule:admin_required and domain_id:%(target.project.domain_id)s",
-
 "identity:list_projects": "rule:admin_required and domain_id:%(domain_id)s",
-
-{% endhighlight %}
+```
 
 先来看create\_project，首先要求admin角色，需要注意的是and的后半句**domain\_id:%(project.domain\_id)s**，这条规则的意思就是create\_project时，使用的token的domain\_id必须等于project所在的domain的domain\_id。
 
@@ -85,37 +80,21 @@ keystone增加了domain这样一个概念之后，其实也就把keystone本身�
 
 policy.v3cloudsample.json中又增加了几种的权限规则，例如：cloud\_admin、domain\_admin、project\_domain。大家可以自己结合policy.v3cloudsample.json来看一下它们各自的作用。
 
-{% highlight bash linenos %}
-
+```json
 "admin_required": "role:admin",
-
 "cloud_admin": "rule:admin_required and domain_id:admin_domain_id",
-
 "service_role": "role:service",
-
 "service_or_admin": "rule:admin_required or rule:service_role",
-
 "owner" : "user_id:%(user_id)s or user_id:%(target.token.user_id)s",
-
 "admin_or_owner": "(rule:admin_required and domain_id:%(target.token.user.domain.id)s) or rule:owner",
-
 "admin_or_cloud_admin": "rule:admin_required or rule:cloud_admin",
-
 "user_domain_id": "domain_id:%(target.user.domain_id)s or domain_id:%(user.domain_id)s",
-
 "project_domain_id": "domain_id:%(target.project.domain_id)s or domain_id:%(project.domain_id)s",
-
 "groups_domain_id": "domain_id:%(group.domain_id)s or domain_id:%(target.group.domain_id)s",
-
 "same_domain_id": "domain_id:%(domain_id)s or domain_id:%(target.domain.id)s",
-
 "match_domain_id": "rule:same_domain_id or rule:user_domain_id or rule:project_domain_id or rule:groups_domain_id",
-
 "domain_admin": "rule:admin_required and rule:match_domain_id",
-
 "project_admin": "rule:admin_required and project_id:%(target.project.id)s",
-
-{% endhighlight %}
+```
 
 具体policy规则的配置可以参考keystone的[官方文档](http://docs.openstack.org/developer/keystone/configuration.html#keystone-api-protection-with-role-based-access-control-rbac)
-

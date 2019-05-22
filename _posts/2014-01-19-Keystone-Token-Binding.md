@@ -10,10 +10,9 @@ tags : [OpenStack, keystone, token, authentication, non-bearer tokens, Kerberos]
 
 *陈锐 RuiChen @kiwik*
 
-*2014/1/19 14:43:05 *
+*2014/1/19 14:43:05*
 
 ----------
-
 
 ## 起因
 
@@ -31,23 +30,23 @@ Token-Binding被设计的目的就是绑定token的生成者和使用者，使Us
 
 当前Keystone的token-binding只支持Kerberos一种方式，X509计划在Icehouse中支持。Kerberos我理解的不是很深，只懂基本流程，以及和Keystone的交互过程。Kerberos介绍可以查看[这里](http://en.wikipedia.org/wiki/Kerberos_%28protocol%29)。
 
-- 假设一个场景，我们使用HostA作为Client端，要向HostB上运行的Keystone获取token，使用user/password的方式获取。同时Kerberos的server端也运行在HostB上。
+1. 假设一个场景，我们使用HostA作为Client端，要向HostB上运行的Keystone获取token，使用user/password的方式获取。同时Kerberos的server端也运行在HostB上。
 
-- 首先要配置Keystone运行在Apache-httpd下，同时要配置Apache-httpd的Kerberos模块。在Keystone的`keystone.conf`中external认证需要enabled。
+2. 首先要配置Keystone运行在Apache-httpd下，同时要配置Apache-httpd的Kerberos模块。在Keystone的`keystone.conf`中external认证需要enabled。
 
-- 在HostB上为Kerberos创建UserA，并设置UserA的密码PasswordA。同时为Keystone创建UserA，并设置密码PasswordB，Kerberos和Keytone中的用户名必须相同。
+3. 在HostB上为Kerberos创建UserA，并设置UserA的密码PasswordA。同时为Keystone创建UserA，并设置密码PasswordB，Kerberos和Keytone中的用户名必须相同。
 
-- 首先要在Client端，通过Kerberos的`kinit`命令认证Client，`kinit UserA`输入之后，会要求输入UserA的Kerberos密码PasswordA。
+4. 首先要在Client端，通过Kerberos的`kinit`命令认证Client，`kinit UserA`输入之后，会要求输入UserA的Kerberos密码PasswordA。
 
-- 然后向Keystone发起auth请求，在POST消息体中，输入UserA/PasswordB，此时Keystone认证时，其实是同时使用了password和external两种认证方式。此处需要RestClient工具支持Kerberos，例如：curl。
+5. 然后向Keystone发起auth请求，在POST消息体中，输入UserA/PasswordB，此时Keystone认证时，其实是同时使用了password和external两种认证方式。此处需要RestClient工具支持Kerberos，例如：curl。
 
-- Client输入的Keystone的用户名和密码（UserA/PasswordB）还是走password认证，获取token。
+6. Client输入的Keystone的用户名和密码（UserA/PasswordB）还是走password认证，获取token。
 
-- Apache-httpd端的Kerberos认证通过之后，会将Kerberos的用户名（UserA）写入auth请求的环境变量`REMOTE_USER`传递给Keystone，Keystone的external认证从数据库中通过REMOTE_USER查询用户信息。
+7. Apache-httpd端的Kerberos认证通过之后，会将Kerberos的用户名（UserA）写入auth请求的环境变量`REMOTE_USER`传递给Keystone，Keystone的external认证从数据库中通过REMOTE_USER查询用户信息。
 
-- Keystone创建token时，将UserA的bind信息（REMOTE_USER）写入token记录中，和创建者的用户信息绑定，也就是和REMOTE_USER绑定。我们查看token的SQL数据库记录时，会在token信息中看到bind的记录。
+8. Keystone创建token时，将UserA的bind信息（REMOTE_USER）写入token记录中，和创建者的用户信息绑定，也就是和REMOTE_USER绑定。我们查看token的SQL数据库记录时，会在token信息中看到bind的记录。
 
-- 如果这个UserA的tokenA被另一个UserB窃取，UserB使用tokenA，再次向Keystone发起修改UserA密码的请求，因为UserB需要使用kinit认证Kerberos，Kerberos会将UserB的用户信息放入`REMOTE_USER`，Keystone在认证tokenA的bind信息时，会发现tokenA中的bind-user是UserA而不是当前的UserB，验证失败，防止tokenA被窃取后重用。
+9. 如果这个UserA的tokenA被另一个UserB窃取，UserB使用tokenA，再次向Keystone发起修改UserA密码的请求，因为UserB需要使用kinit认证Kerberos，Kerberos会将UserB的用户信息放入`REMOTE_USER`，Keystone在认证tokenA的bind信息时，会发现tokenA中的bind-user是UserA而不是当前的UserB，验证失败，防止tokenA被窃取后重用。
 
 ## 现有问题
 

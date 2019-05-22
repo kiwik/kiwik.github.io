@@ -30,8 +30,7 @@ vpn就像花钱租了个梯子，钱到墙翻，不解释。
 
 在~/.ssh/目录创建一个config文件，内容如下，在网上找个socks的代理，用ip和port替换`socks-proxy-ip:port`，配好别忘了用你自己的gerrit用户测试一下，`ssh -p 29418 your-user-name@review.openstack.org`
 
-{% highlight bash %}
-
+```
 stack@devstack:/opt/stack/nova$  [bp/io-ops-weight]$ cat ~/.ssh/config
 Host review.openstack.org
     ProxyCommand connect -S socks-proxy-ip:port %h %p
@@ -51,8 +50,7 @@ stack@devstack:/opt/stack/nova$  [bp/io-ops-weight]$ ssh -p 29418 kiwik@review.o
   git clone ssh://kiwik@review.openstack.org:29418/REPOSITORY_NAME.git
 
 Connection to review.openstack.org closed.
-
-{% endhighlight %}
+```
 
 > 注意：这种方法要用到一个connect命令，windows下安装git之后，就直接安装了这个命令，但需要把git安装目录的bin目录配置到%PATH%下；linux环境，需要通过包管理器安装一下，例如：apt-get install connect-proxy
 
@@ -72,38 +70,31 @@ Connection to review.openstack.org closed.
 
 - 然后通过`git remote set-url gerrit https://username:http-password@review.openstack.org/openstack/nova.git`命令把ssh修改成https方式，当然也可以用http，经过我的实验都是可以的。别忘了把上面字符串中的用户名/密码改成你的gerrit用户名和上一步生成的HTTP密码。
 
-
 修改前：
 
-{% highlight bash %}
-
+```
 chenrui@CHENRUI-PC /d/dev/PyProjects/nova (master)
 $ git remote -v
 gerrit  ssh://kiwik@review.openstack.org:29418/openstack/nova.git (fetch)
 gerrit  ssh://kiwik@review.openstack.org:29418/openstack/nova.git (push)
 origin  https://github.com/openstack/nova.git (fetch)
 origin  https://github.com/openstack/nova.git (push)
-
-{% endhighlight %}
+```
 
 修改后：
 
-{% highlight bash %}
-
+```
 chenrui@CHENRUI-PC /d/dev/PyProjects/nova (master)
 $ git remote -v
 gerrit  https://kiwik:your-gerrit-http-password@review.openstack.org/openstack/nova.git (fetch)
 gerrit  https://kiwik:your-gerrit-http-password@review.openstack.org/openstack/nova.git (push)
 origin  https://github.com/openstack/nova.git (fetch)
 origin  https://github.com/openstack/nova.git (push)
-
-
-{% endhighlight %}
+```
 
 测试一下：
 
-{% highlight bash %}
-
+```
 chenrui@CHENRUI-PC /d/dev/PyProjects/nova (master)
 $ git review -n -v
 2014-08-26 20:39:42.736000 Running: git log --color=never --oneline HEAD^1..HEAD
@@ -124,8 +115,7 @@ From https://review.openstack.org/openstack/nova
 2014-08-26 20:40:13.308000 Running: git log --color=always --decorate --oneline HEAD --not --remotes=gerrit
 No changes between HEAD and gerrit/master. Submitting for review would
 be pointless.
-
-{% endhighlight %}
+```
 
 直接配置gerrit使用http协议这种方式就像是技术屌丝搬了半天砖，发现旁边的技术大牛在墙上开了个暗道直接过去了，呵呵，傻眼~~
 

@@ -10,7 +10,7 @@ tags : [OpenStack, develop, win-sshfs, git, DevStack]
 
 *陈锐 RuiChen @kiwik*
 
-*2014/1/18 21:41:58 *
+*2014/1/18 21:41:58*
 
 ----------
 
@@ -50,23 +50,15 @@ DevStack完全没有可能性。
 
 DevStack装完，再把vim，git，pip，tox都装好，这些后面都会用到，tox的使用可以参考我的[blog](http://kiwik.github.io/openstack/2013/07/15/Openstack%E5%B7%A5%E7%A8%8B%E7%9A%84%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%E5%AE%9E%E8%B7%B5-tox/)。这里是几个Linux上的git配色和基本设置。
 
-{% highlight bash %}
-
+```bash
 git config --global core.excludesfile "/home/ruichen/.gitignore"
-
 git config --global color.status auto
-
 git config --global color.diff auto
-
 git config --global color.branch auto
-
 git config --global color.interactive auto
-
 git config --global core.editor vim
-
 git config --global core.autocrlf input
-
-{% endhighlight %}
+```
 
 ## win-sshfs
 

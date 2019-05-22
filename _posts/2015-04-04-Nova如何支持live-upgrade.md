@@ -10,7 +10,7 @@ tags : [nova, upgrade, rpc, object]
 
 *陈锐 RuiChen @kiwik*
 
-*2015/4/4 16:35:55 *
+*2015/4/4 16:35:55*
 
 ----------
 
@@ -34,8 +34,7 @@ tags : [nova, upgrade, rpc, object]
 
 简单来说就是一个rpcapi端的版本控制机制，在升级之前，rpc client端设置一个版本阀值，当rpcapi需要发送消息时，通过can\_send\_version方法判断，如果超过阀值就做自动降级处理，没有做降级处理的消息，会被禁止发送，具体实现可以参考oslo\_messaging的代码。例子如下：
 
-{% highlight python %}
-
+```python
 def shelve_offload_instance(self, ctxt, instance,
                             clean_shutdown=True):
     msg_args = {'instance': instance}
@@ -47,8 +46,7 @@ def shelve_offload_instance(self, ctxt, instance,
     cctxt = self.client.prepare(server=_compute_host(None, instance),
             version=version)
     cctxt.cast(ctxt, 'shelve_offload_instance', **msg_args)
-
-{% endhighlight %}
+```
 
 如果我们计划从juno升级到kilo，首先需要设置所有rpcapi的upgrade levels为juno，这样当我们升级的过程中，如果一个已经升到kilo版本的conductor向juno版本的compute发送rpc消息，还是会使用和juno版本rpcapi接口兼容的消息。
 

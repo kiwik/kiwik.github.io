@@ -10,7 +10,7 @@ tags : [Vancouver, summit, nova]
 
 *陈锐 RuiChen @kiwik*
 
-*2015/05/19 00:35:50 *
+*2015/05/19 00:35:50*
 
 ----------
 

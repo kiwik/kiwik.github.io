@@ -52,7 +52,6 @@ git clone https://github.com/openstack-dev/devstack.git
 
 ```bash
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
-
 vim /etc/apt/sources.list
 ```
 

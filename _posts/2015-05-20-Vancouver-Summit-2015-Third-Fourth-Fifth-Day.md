@@ -10,7 +10,7 @@ tags : [Vancouver, summit, nova, upgrade, api, heat]
 
 *陈锐 RuiChen @kiwik*
 
-*2015/05/20 22:35:50 *
+*2015/05/20 22:35:50*
 
 ----------
 
