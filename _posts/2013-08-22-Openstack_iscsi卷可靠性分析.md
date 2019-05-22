@@ -28,9 +28,9 @@ tags : [OpenStack, cinder, nova, iscsi, 存储, 可靠性]
 
 |              | iscsi initiator | iscsi target | 虚拟机   | 恢复手段                                              |
 |--------------|----------------------|-------------------|---------------|-------------------------------------------------------|
-| 重启iscsid   | 中断                 | 正常              | iscsi卷不可用 | active虚拟机：reboot shutdown虚拟机：卸卷，挂卷，启动 |
-| 重启计算节点 | 中断                 | 正常              | iscsi卷不可用 | active虚拟机：reboot shutdown虚拟机：卸卷，挂卷，启动 |
-| 重启存储节点 | 正常                 | 中断              | iscsi卷不可用 | 启动存储节点，恢复网络连接                            |
+| 重启iscsid   | 中断                 | 正常              | iscsi卷不可用 | active虚拟机：reboot<br>shutdown虚拟机：卸卷，挂卷，启动 |
+| 重启计算节点 | 中断                 | 正常              | iscsi卷不可用 | active虚拟机：reboot<br>shutdown虚拟机：卸卷，挂卷，启动 |
+| 重启存储节点 | 正常                 | 中断              | iscsi卷不可用 | 启动存储节点<br>恢复网络连接                            |
 
 ----------
 
