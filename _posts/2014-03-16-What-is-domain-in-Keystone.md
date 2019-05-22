@@ -36,9 +36,7 @@ token实际的scope最终转化为两种domain和project。
 
 ##授权
 
-keystone的授权（`create_grant`）过程，其实是一个三方关联的过程，三方就是：actor（被授权的主体），role（权限），target（被授权的范围）。实际授权过程可以这样理解：
-
-`为actor在target的范围内赋予role的权利。`
+keystone的授权（`create_grant`）过程，其实是一个三方关联的过程，三方就是：actor（被授权的主体），role（权限），target（被授权的范围）。实际授权过程可以这样理解：**为actor在target的范围内赋予role的权利**。
 
 - actor -> user & group
 - targe -> project & domain
@@ -70,7 +68,7 @@ keystone默认的**policy.json**，其实是拥有admin角色的用户可以做�
 
 这里有几个关键点需要注意，首先userA在domainA内必须要有admin权限，这样才能满足**rule:admin\_required**，其次，token需要是一个domain scope的token，这样token中才会有**domain\_id** ，再次，创建project的时候，domain\_id参数必须等于domainA的id，这样才能满足**domain\_id:%(project.domain\_id)s**。
 
-*这样一条规则的意义在于，可以限制只有在domainA内有权限的用户才能在domainA创建project。*
+> 这样一条规则的意义在于，可以限制只有在domainA内有权限的用户才能在domainA创建project。
 
 get\_project比较好理解，就是查询的project的domain\_id必须和token的domain\_id相同，也就是只能查询token所在范围内的project。
 
