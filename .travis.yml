@@ -1,4 +1,9 @@
-arch: arm64-graviton2
+os: linux
+arch:
+  - arm64-graviton2
+  - arm64
+virt: lxd
+group: edge
 language: ruby
 rvm: 2.2
 script: "bundle exec jekyll build"
