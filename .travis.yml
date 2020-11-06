@@ -8,7 +8,7 @@ virt:
   - vm
 group: edge
 language: ruby
-rvm: 2.2
+rvm: 2.6
 script: "bundle exec jekyll build"
 branches:
   only:
