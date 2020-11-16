@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Hello World OpenLab!
+title: Hello World ARM64!
 tagline: regexisart
 ---
 {% include JB/setup %}
@@ -15,15 +15,14 @@ tagline: regexisart
 
 ## Doing list
 
-- ARM
-- OpenLab
-- CICD
+- ARM CI
+- open source enhancement on ARM64
 
 ## Tips
 
 ```python
 if __name__ == '__main__':
-    print('Hello World OpenLab!')
+    print('Hello World ARM64!')
 ```
 
 ----------

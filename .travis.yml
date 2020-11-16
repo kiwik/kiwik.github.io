@@ -4,8 +4,7 @@ arch:
   - arm64-graviton2
   - arm64
 virt:
-  - lxd
-  - vm
+  - vm # or lxd
 group: edge
 language: ruby
 rvm: 2.6
