@@ -1,0 +1,27 @@
+ruby_task:
+  name: Check Jekyll blog with built-in ruby
+  arm_container:
+    image: ruby:latest
+  env_script: uname -a
+  setup_script: |
+    gem install jekyll bundler github-pages
+  script: |
+    echo "checking pull request #$CIRRUS_PR"
+    bundle exec jekyll build --verbose
+
+
+os_task:
+  name: Check Jekyll blog with openEuler
+  arm_container:
+    matrix:
+      - image: docker.io/openeuler/openeuler
+  env_script: |
+    uname -a
+    cat /etc/openEuler-release
+  setup_script: |
+    dnf install -y ruby ruby-devel libffi-devel
+    dnf group install -y "Development Tools"
+    gem install jekyll bundler github-pages
+  script: |
+    echo "checking pull request #$CIRRUS_PR"
+    bundle exec jekyll build --verbose

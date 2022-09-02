@@ -5,12 +5,11 @@ arch:
   - arm64
 virt:
   - vm # or lxd
-group: edge
 language: ruby
 rvm: 2.6
-script: "bundle exec jekyll build"
+notifications:
+  email: false
 branches:
   only:
     - master
-notifications:
-  email: false
+script: "bundle exec jekyll build --verbose"
