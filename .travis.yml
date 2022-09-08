@@ -2,9 +2,10 @@ os: linux
 dist: focal
 arch:
   - arm64-graviton2
-  - arm64
+# - arm64
 virt:
-  - vm # or lxd
+  - vm
+# - lxd
 language: ruby
 rvm: 2.6
 notifications:
