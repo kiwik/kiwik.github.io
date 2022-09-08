@@ -1,10 +1,10 @@
 task:
   name: Check Jekyll blog
-  arm_container:
-    matrix:
-      - image: docker.io/openeuler/openeuler
-      - image: docker.io/library/rockylinux:9
-      - image: ruby:latest
+  matrix:
+    arm_container:
+      image: docker.io/openeuler/openeuler
+    container:
+      image: docker.io/library/rockylinux:9
   env_script: |
     uname -a
     cat /etc/os-release

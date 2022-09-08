@@ -8,13 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-on-openEuler:
+  check-in-container:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         container-image: [ "docker.io/openeuler/openeuler",
-                           "docker.io/library/rockylinux:9",
-                           "ruby:latest"]
+                           "docker.io/library/rockylinux:9"]
     container:
       image: ${{ matrix.container-image }}
     steps:
