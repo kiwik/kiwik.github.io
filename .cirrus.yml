@@ -2,7 +2,7 @@ task:
   name: Check Jekyll blog
   matrix:
     arm_container:
-      image: docker.io/openeuler/openeuler
+      image: docker.io/openeuler/openeuler:22.03
     container:
       image: docker.io/library/rockylinux:9
   env_script: |

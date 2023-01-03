@@ -9,10 +9,10 @@ on:
 
 jobs:
   check-in-container:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        container-image: [ "docker.io/openeuler/openeuler",
+        container-image: [ "docker.io/openeuler/openeuler:22.03",
                            "docker.io/library/rockylinux:9"]
     container:
       image: ${{ matrix.container-image }}
